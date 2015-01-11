@@ -1,1 +1,19 @@
-#Plugin File
+name: CrystalKills
+main: com.crystalcraftmc.crystalkills.CrystalKills
+version: 0.0.1-SNAPSHOT
+description: Shows players how many kills they have.
+authors: [jflory7, jwood9198, Jacc734]
+
+commands:
+  crystalkills:
+    description: Shows a player how many players they killed.
+    aliases: [ck, ccmckills]
+    permission: crystalkills.count
+
+permissions:
+  crystalkills.count:
+    description: Shows a player how many players they killed.
+    default: true
+  crystalkills.reload:
+    description: Reload the configuration file.
+    default: op
