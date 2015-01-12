@@ -1,7 +1,7 @@
 name: CrystalKills
 main: com.crystalcraftmc.crystalkills.CrystalKills
 version: 0.0.1-SNAPSHOT
-description: Shows players how many kills they have.
+description: Show players how many kills they have.
 authors: [jflory7, jwood9198, Jacc734]
 
 commands:
@@ -17,9 +17,3 @@ permissions:
   crystalkills.reload:
     description: Reload the configuration file.
     default: op
-  crystalkills.editkills:
-  	description: Edits kills.
-  	default: op
-  crystalkills.countOther:
-  	description: Counts player kills.
-  	default: op
