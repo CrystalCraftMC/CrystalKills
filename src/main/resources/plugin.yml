@@ -17,3 +17,6 @@ permissions:
   crystalkills.reload:
     description: Reload the configuration file.
     default: op
+  crystalkills.countOther:
+    description: Count another players kills.
+    default: op
