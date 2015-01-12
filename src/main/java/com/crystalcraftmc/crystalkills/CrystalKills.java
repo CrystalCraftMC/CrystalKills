@@ -57,7 +57,7 @@ public class CrystalKills extends JavaPlugin{
 			else if (!isPlayer(sender)) reloadMethod(sender);
 			return true;
 		}
-		else if (sender.hasPermission("crystalkills.editkills") && cmd.getName().equalsIgnoreCase("crystalkills") && args.length == 3 && args[0].equalsIgnoreCase("editKills") && isInt(sender, args[2])) {
+		else if (cmd.getName().equalsIgnoreCase("crystalkills") && args.length == 3 && args[0].equalsIgnoreCase("editKills") && isInt(sender, args[2]) ) {
 			if (isPlayer(sender) && sender.isOp()){
 				Player findPlayer = getServer().getPlayer(args[1]);
 				int x = toInt(sender, args[2]);
@@ -65,25 +65,26 @@ public class CrystalKills extends JavaPlugin{
 					findPlayer.setStatistic(org.bukkit.Statistic.PLAYER_KILLS, x);
 					return true;
 				}
-				else {
+				else{
 					sender.sendMessage(ChatColor.GRAY + "Requested player is offline - otherwise username was mispelled. ");
 					sender.sendMessage(ChatColor.GRAY + "Usage: /CrystalKills editKills [Player] [integer number of kills]");
 				}
-				return true;
 			}
+			return false;
 		}
-		else if (sender.hasPermission("crystalkills.countOther") && cmd.getName().equalsIgnoreCase("crystalkills") && args.length == 1) {
+		else if (cmd.getName().equalsIgnoreCase("crystalkills") && args.length == 1) {
 			if (isPlayer(sender) && sender.isOp()){
 				Player findPlayer = getServer().getPlayer(args[0]);
 				if(findPlayer.isOnline() && findPlayer.getName() != null){
 					sender.sendMessage(ChatColor.GOLD + "Player: " + ChatColor.RED + findPlayer + ChatColor.GOLD + " has " + ChatColor.RED + findPlayer.getStatistic(org.bukkit.Statistic.PLAYER_KILLS) + ChatColor.GOLD + " kills.");
 					return true;
 				}
-				else {
+				else if (sender.isOp()) {
 					sender.sendMessage(ChatColor.GRAY + "Requested player is offline - otherwise username was mispelled. ");
 					sender.sendMessage(ChatColor.GRAY + "Usage: /CrystalKills [Player Name]");
 				}
 			}
+			return false;
 		}
 		else if (isPlayer(sender) && sender.hasPermission("crystalkills.count")) {
 			Player me = (Player) sender;
@@ -100,11 +101,12 @@ public class CrystalKills extends JavaPlugin{
 				}
 				return true;
 			}
+			return false;
 		}
 		sender.sendMessage(ChatColor.GOLD + "Usage: /CrystalKills");
 		return false;
 	}
-	
+
 	private static int toInt(CommandSender sender, String temp) {
 		int x;
 		try {
@@ -114,7 +116,7 @@ public class CrystalKills extends JavaPlugin{
 		}
 		return x;
 	}
-	
+
 	private boolean isPlayer(CommandSender sender) {
 		if (!(sender instanceof Player)) {
 			sender.sendMessage(ChatColor.RED + "You must be a player to use this command.");
@@ -131,9 +133,9 @@ public class CrystalKills extends JavaPlugin{
 	}
 
 	private static boolean isInt(CommandSender sender, String temp) {
-		int x;
 		try {
-			x = Integer.parseInt(temp);
+			@SuppressWarnings("unused")
+			int x = Integer.parseInt(temp);
 		} catch (NumberFormatException nFE) {
 			sender.sendMessage(ChatColor.RED + "There was a problem with the value you entered. Try again.");
 			return false;
