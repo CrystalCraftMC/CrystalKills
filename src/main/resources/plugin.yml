@@ -7,4 +7,4 @@ authors: [jflory7, jwood9198, Jacc734]
 commands:
  crystalkills:
   description: Shows a player how many players they killed.
-   aliases: [ck, ccmckills, kills]
+  aliases: [ck, ccmckills, kills]
