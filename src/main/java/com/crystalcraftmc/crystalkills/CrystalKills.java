@@ -16,19 +16,28 @@
 
 package com.crystalcraftmc.crystalkills;
 
+import java.io.File;
+
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Statistic;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.*;
 
-import java.io.File;
-
-public class CrystalKills extends JavaPlugin{
+public class CrystalKills extends JavaPlugin implements Listener{
+	
+	public static Scoreboard ckBoard;
+	public static Score scores;
 
 	public void onEnable() {
 		getLogger().info(ChatColor.GRAY + "CrystalKills has been initialized!");
+		getServer().getPluginManager().registerEvents(this, this);
 		try {
 			File database = new File(getDataFolder(), "config.yml");
 			if (!database.exists()) saveDefaultConfig();
@@ -42,68 +51,136 @@ public class CrystalKills extends JavaPlugin{
 		getLogger().info(ChatColor.GRAY + "CrystalKills has been stopped by the server.");
 	}
 
+	public void sBoard () {
+		ScoreboardManager manager = Bukkit.getServer().getScoreboardManager();
+		Scoreboard ckboard = manager.getNewScoreboard();
+		Objective obj = ckboard.registerNewObjective("Kills", "playerKills");
+		obj.setDisplayName("CrystalKill");
+		obj.setDisplaySlot(DisplaySlot.BELOW_NAME);
+	}
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if (cmd.getName().equalsIgnoreCase("crystalkills") && args.length == 1 && args[0].equalsIgnoreCase("reload")) {
-			if (isPlayer(sender) && sender.isOp()) reloadMethod(sender);
-			else if (!isPlayer(sender)) reloadMethod(sender);
+		ChatColor au = ChatColor.GOLD; 
+		ChatColor g = ChatColor.GRAY;
+		ChatColor i = ChatColor.ITALIC;
+
+		if(cmd.getName().equalsIgnoreCase("crystalkills")) 
+		{
+			//LENGTH 3
+			if (args.length == 3) 
+			{
+				if (args[0].equalsIgnoreCase("setKills") && isInt(sender, args[2]) && sender.isOp()) {
+					int num = toInt(sender, args[2]);
+					String playerName = args[1];
+					editKill(sender, playerName, num);
+				} else if (sender.isOp()) {
+					sender.sendMessage(g + "" + i + "Usage: /CrystalKills setKills <player> <Integer>");
+				}
+			}
+
+			//LENGTH 2
+			else if (args.length == 2) 
+			{
+				if (args[0].equalsIgnoreCase("check")) 
+				{
+					return checkPlayer(sender, args[1]);
+				} else 
+				{
+					sender.sendMessage(g + "" + i + "Usage: /CrystalKills check <player>");
+				}
+				if (args[0].equalsIgnoreCase("statSync") && sender.isOp()) {
+					return updatePlayerScoreToStat(args[1]);
+				} else {
+					sender.sendMessage(g + "" + i + "Usage: /CrystalKills sync <player>");
+				}
+			}
+
+			//LENGTH 1 -- 
+			else if (args.length == 1) 
+			{
+				if (args[0].equalsIgnoreCase("reload") && sender.isOp())
+					return reloadMethod(sender);
+			}
+
+			//LENGTH 0
+			else if (args.length == 0 && isPlayer(sender)) 
+			{
+				return ckCMD(sender);
+			}
+		}
+		sender.sendMessage(au + "Usages: /CrystalKills [statSync,check,reload] <>");
+		return true;
+	}
+
+	@SuppressWarnings("deprecation")
+	private boolean editKill(CommandSender sender, String playerName, int num) {
+		ChatColor au = ChatColor.GOLD; ChatColor g = ChatColor.GRAY; ChatColor r = ChatColor.RED;
+		Player findPlayer = getServer().getPlayer(playerName);
+		if(findPlayer.getName() != null){
+			ckBoard.getObjective("Kill").getScore(findPlayer).setScore(num);
+			sender.sendMessage(au + "Player: " + r + findPlayer.getName() + au + " has " + r + findPlayer.getStatistic(Statistic.PLAYER_KILLS) + au + " kills.");
+			return true;
+		} else {
+			sender.sendMessage(g + "Requested player is offline - otherwise username was mispelled. ");
+			sender.sendMessage(g + "" + ChatColor.ITALIC + "Usage: /CrystalKills <player> <positive integer>");
 			return true;
 		}
-		else if (isPlayer(sender) && sender.hasPermission("crystalkills.count") && args.length == 0) {
-			Player me = (Player) sender;
-			if (cmd.getName().equalsIgnoreCase("crystalkills")) {
-				int kills = me.getStatistic(Statistic.PLAYER_KILLS);
-				if(kills == 0){
-					me.sendMessage(ChatColor.GREEN + "The peace of the universe flows in your veins. You have not killed.");
-				} else if(kills == 1){
-					me.sendMessage(ChatColor.GRAY + "How does feel... to have killed a player? ");
-				} else if(kills > 1){
-					me.sendMessage(ChatColor.GRAY + "Your hands are covered with the blood of " + ChatColor.DARK_RED + kills + ChatColor.GRAY + " players.");
-				} else if(kills < 0){
-					me.sendMessage(ChatColor.DARK_GREEN + "" + ChatColor.BOLD + "You have achieved Ferwinn's power - the definition of minecraft peace.");
-				}
-				return true;
-			}
-			return false;
+	}
+
+	private boolean checkPlayer(CommandSender sender, String arg0) {
+		ChatColor au = ChatColor.GOLD; 
+		ChatColor g = ChatColor.GRAY; 
+		ChatColor r = ChatColor.RED;
+
+		Player findPlayer = getServer().getPlayer(arg0);
+		if(findPlayer.getName() != null && findPlayer.isOnline()){
+			sender.sendMessage(au + "Player: " + r + findPlayer.getName() + au + " has " + r + findPlayer.getStatistic(Statistic.PLAYER_KILLS) + au + " kills.");
+			return true;
+		} else {
+			sender.sendMessage(g + "Requested player is offline - otherwise username was mispelled. ");
+			sender.sendMessage(g + "Usage: /CrystalKills [player]");
+			return true;
 		}
-		else if (cmd.getName().equalsIgnoreCase("crystalkills") && args.length == 1) {
-			if (isPlayer(sender) && sender.isOp()){
-				Player findPlayer = getServer().getPlayer(args[0]);
-				if(findPlayer.isOnline() && findPlayer.getName() != null){
-					sender.sendMessage(ChatColor.GOLD + "Player: " + ChatColor.RED + findPlayer.getName() + ChatColor.GOLD + " has " + ChatColor.RED + findPlayer.getStatistic(org.bukkit.Statistic.PLAYER_KILLS) + ChatColor.GOLD + " kills.");
-					return true;
-				}
-				else if (sender.isOp()) {
-					sender.sendMessage(ChatColor.GRAY + "Requested player is offline - otherwise username was mispelled. ");
-					sender.sendMessage(ChatColor.GRAY + "Usage: /CrystalKills [Player Name]");
-				}
-			}
-			return false;
+	}
+
+	private boolean ckCMD(CommandSender sender) {
+		ChatColor g = ChatColor.GRAY;
+		Player me = (Player) sender;
+		int kills = me.getStatistic(Statistic.PLAYER_KILLS);
+		if(kills < 0){
+			me.sendMessage(ChatColor.DARK_GREEN + "" + ChatColor.BOLD + "You have unlocked Ferwinn's power - the definition of minecraft peace. Once lost it cannot be regained.");
+			return true;
+		} else if(kills == 0){
+			me.sendMessage(ChatColor.GREEN + "Zero kills - The path is before you, war or peace and the choice never ending... choose well. ");
+			return true;
+		} else if(kills == 1){
+			me.sendMessage(g + "How does feel... to have killed a player? ");
+			return true;
+		} else if(kills > 1){
+			me.sendMessage(g + "Your hands run red with the blood of " + ChatColor.DARK_RED + kills + g + " deaths.");
+			return true;
+		} else if(kills > 1000){
+			me.sendMessage(ChatColor.DARK_RED + "You have killed over one thousand times: " + ChatColor.GOLD + kills + ChatColor.DARK_RED + " flows in only one direction - life to death.");
+			return true;
+		} else if(kills > 1020){
+			me.sendMessage(ChatColor.RED + "You have grown accustom to killing, blood no long weighs on your mind: " + ChatColor.GOLD + kills + ChatColor.RED + " kills");
+			return true;
+		} else if(kills > 2000){
+			me.sendMessage(ChatColor.GRAY + "Killing is second nature for you now - lets just get the number, get this over with this: " + ChatColor.RED + kills + ChatColor.GRAY + " kills");
+			return true;
+		} else if(kills > 5000){
+			me.sendMessage(ChatColor.DARK_PURPLE + "You are a constant companion to the grim reaper: " + ChatColor.GRAY + kills + ChatColor.DARK_PURPLE + " kills");
+			return true;
+		} else if(kills > 5020){
+			me.sendMessage(ChatColor.DARK_GRAY + "The bodies just keep piling up: " + ChatColor.BLUE + kills + ChatColor.DARK_GRAY + " kills");
+			return true;
+		} else if(kills > 10000){
+			me.sendMessage(ChatColor.DARK_RED + "" + ChatColor.BOLD + "Your name is Ares, God of War... the number of dead is an absolute vector: " + ChatColor.MAGIC + kills + ChatColor.DARK_RED + " kills");
+			return true;
 		}
-		else if (cmd.getName().equalsIgnoreCase("crystalkills") && args.length == 3 && args[0].equalsIgnoreCase("editKills") && isInt(sender, args[2]) ) {
-			if (isPlayer(sender) && sender.isOp()){
-				Player findPlayer = null;
-				try{
-				findPlayer = getServer().getPlayer(args[1]);
-				} catch (Exception e) {
-					return false;
-				}
-				int x = toInt(sender, args[2]);
-				if(findPlayer.isOnline() && findPlayer.getName() != null){
-					findPlayer.setStatistic(Statistic.PLAYER_KILLS, x);
-					sender.sendMessage(ChatColor.GRAY + findPlayer.getName() + " now has " + findPlayer.getStatistic(Statistic.PLAYER_KILLS));
-					return true;
-				}
-				else{
-					sender.sendMessage(ChatColor.GRAY + "Requested player is offline - otherwise username was mispelled. ");
-					sender.sendMessage(ChatColor.GRAY + "Usage: /CrystalKills editKills [Player] [integer number of kills]");
-				}
-			}
-			return false;
-		}
-		
-		sender.sendMessage(ChatColor.GOLD + "Usage: /CrystalKills");
-		return false;
+		sender.sendMessage("Usage: /CrystalKills");
+		return true;
 	}
 
 	private static int toInt(CommandSender sender, String temp) {
@@ -132,13 +209,33 @@ public class CrystalKills extends JavaPlugin{
 	}
 
 	private static boolean isInt(CommandSender sender, String temp) {
+		@SuppressWarnings("unused")
+		int x = 0;
 		try {
-			@SuppressWarnings("unused")
-			int x = Integer.parseInt(temp);
+			x = Integer.parseInt(temp);
 		} catch (NumberFormatException nFE) {
-			sender.sendMessage(ChatColor.RED + "There was a problem with the value you entered. Try again.");
+			sender.sendMessage(ChatColor.RED + "There was a problem with "+ temp +" you entered. Try again.");
 			return false;
 		}
 		return true;
+	}
+
+	@SuppressWarnings("deprecation")
+	private boolean updatePlayerScoreToStat(String temp) {
+		Player findPlayer = getServer().getPlayer(temp);
+		if(findPlayer.getName() != null && findPlayer.isOnline()){
+			findPlayer.getStatistic(Statistic.PLAYER_KILLS);
+			findPlayer.setScoreboard(ckBoard);
+			ckBoard.getObjective("Kill").getScore(findPlayer).setScore(findPlayer.getStatistic(Statistic.PLAYER_KILLS));
+			return true;
+		} else {
+			getLogger().info(ChatColor.GRAY + "Requested player is offline - otherwise username was mispelled.");
+			return true;
+		}
+	}
+
+	@EventHandler
+	public void onLogin(PlayerLoginEvent event) {
+		updatePlayerScoreToStat(event.getPlayer().getName());
 	}
 }
