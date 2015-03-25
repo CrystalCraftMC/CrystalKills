@@ -1,8 +1,9 @@
 name: CrystalKills
 main: com.crystalcraftmc.crystalkills.CrystalKills
-version: ${version}
+version: 0.1.1
 description: Show players how many kills they have.
-authors: [jflory7, jwood9198, Jacc734]
+authors: [jflory7, Jwood9198, Jacc734]
+website: http://crystalcraftmc.com
 
 commands:
   crystalkills:
